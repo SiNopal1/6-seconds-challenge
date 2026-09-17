@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Latihan Kilat Biner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1F16;
+    --panel:#12291D;
+    --panel-2:#183523;
+    --trace:#2C5B3F;
+    --trace-soft:#20422D;
+    --copper:#C9843C;
+    --copper-bright:#E8A857;
+    --led:#9FE870;
+    --led-dim:#3C5C3F;
+    --text:#EAF3EC;
+    --text-dim:#7FA08C;
+    --error:#E8735C;
+    --font-ui:'Space Grotesk','Segoe UI',sans-serif;
+    --font-mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  body{
+    font-family:var(--font-ui);
+    min-height:100vh;
+    padding:2.5rem 1.25rem 4rem;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(201,132,60,0.06), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(159,232,112,0.05), transparent 45%),
+      var(--bg);
+  }
+
+  #app{
+    max-width:720px;
+    margin:0 auto;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    #app{ animation: rise 0.5s ease-out; }
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  a, button, input{ font-family:inherit; }
+
+  :focus-visible{
+    outline:2px solid var(--copper-bright);
+    outline-offset:2px;
+  }
+
+  .hidden{ display:none !important; }
+
+  .masthead{ text-align:center; margin-bottom:1.75rem; }
+  .masthead h1{
+    font-size:clamp(1.7rem, 4.5vw, 2.5rem);
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0 0 0.5rem;
+  }
+  .masthead .tagline{
+    color:var(--text-dim);
+    font-size:0.98rem;
+    line-height:1.5;
+    max-width:38rem;
+    margin:0 auto;
+  }
+
+  .console{
+    position:relative;
+    border:1px solid var(--trace);
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border-radius:10px;
+    padding:1.75rem;
+  }
+  .console::before,.console::after{
+    content:"";
+    position:absolute;
+    width:16px;height:16px;
+    border:2px solid var(--copper);
+    pointer-events:none;
+  }
+  .console::before{ top:-1px;left:-1px;border-right:none;border-bottom:none;border-top-left-radius:6px; }
+  .console::after{ bottom:-1px;right:-1px;border-left:none;border-top:none;border-bottom-right-radius:6px; }
+
+  .field-group{ margin-bottom:1.6rem; }
+  .field-group:last-of-type{ margin-bottom:1.4rem; }
+  .field-label{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin-bottom:0.7rem;
+  }
+
+  .category-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0.7rem;
+  }
+  @media (max-width:640px){
+    .category-grid{ grid-template-columns:1fr; }
+  }
+
+  .cat-card{
+    text-align:left;
+    background:rgba(0,0,0,0.15);
+    border:1px solid var(--trace-soft);
+    border-radius:8px;
+    padding:0.9rem 0.9rem 1rem;
+    color:var(--text);
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    gap:0.55rem;
+    transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  .cat-card:hover{ border-color:var(--trace); background:rgba(0,0,0,0.22); }
+  .cat-card.active{
+    border-color:var(--copper);
+    background:rgba(201,132,60,0.08);
+  }
+  .cat-card .icons-row{
+    display:flex;
+    gap:0.4rem;
+    color:var(--copper-bright);
+  }
+  .cat-card.active .icons-row{ color:var(--led); }
+  .gate-svg{ width:30px;height:24px; }
+  .bits-svg{ width:60px;height:16px; }
+  .mix-svg{ width:46px;height:24px; }
+  .cat-name{ font-weight:600; font-size:0.95rem; }
+  .cat-desc{ font-size:0.82rem; color:var(--text-dim); line-height:1.4; }
+
+  .count-row{ display:flex; gap:0.6rem; flex-wrap:wrap; }
+  .count-switch{
+    font-family:var(--font-mono);
+    font-size:1rem;
+    font-weight:600;
+    background:rgba(0,0,0,0.15);
+    border:1px solid var(--trace-soft);
+    color:var(--text);
+    border-radius:6px;
+    padding:0.6rem 1.1rem;
+    cursor:pointer;
+    transition:border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .count-switch:hover{ border-color:var(--trace); }
+  .count-switch.active{
+    border-color:var(--led);
+    background:rgba(159,232,112,0.1);
+    color:var(--led);
+  }
+
+  .budget-readout{
+    font-family:var(--font-mono);
+    font-size:0.85rem;
+    color:var(--text-dim);
+    margin-bottom:1.4rem;
+  }
+  .budget-readout strong{ color:var(--copper-bright); }
+
+  .cta{
+    width:100%;
+    font-family:var(--font-ui);
+    font-size:1rem;
+    font-weight:600;
+    background:var(--copper);
+    color:#1A0E04;
+    border:none;
+    border-radius:7px;
+    padding:0.85rem 1rem;
+    cursor:pointer;
+    transition:background 0.15s ease, opacity 0.15s ease;
+  }
+  .cta:hover:not(:disabled){ background:var(--copper-bright); }
+  .cta:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  /* quiz screen */
+  .status-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-family:var(--font-mono);
+    font-size:0.85rem;
+    color:var(--text-dim);
+    margin-bottom:0.5rem;
+  }
+  #budget-clock.overtime{ color:var(--error); }
+
+  .progress-track{
+    height:3px;
+    background:var(--trace-soft);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:1.1rem;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--copper),var(--led));
+    transition:width 0.2s ease;
+  }
+
+  .quiz-console{ text-align:center; padding:2.4rem 1.5rem; }
+
+  .op-tag{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:0.75rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--copper-bright);
+    border:1px solid var(--copper);
+    border-radius:4px;
+    padding:0.2rem 0.55rem;
+    margin-bottom:1.2rem;
+  }
+  .op-tag.decimal{ color:var(--led); border-color:var(--led-dim); }
+
+  .readout{
+    font-family:var(--font-mono);
+    font-weight:600;
+    font-size:clamp(1.5rem, 6vw, 2.3rem);
+    letter-spacing:0.03em;
+    line-height:1.4;
+    word-break:break-word;
+    text-shadow:0 0 18px rgba(201,132,60,0.35);
+    margin-bottom:1.8rem;
+  }
+
+  .answer-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0.9rem;
+    border-bottom:1px solid var(--trace);
+    padding-bottom:0.6rem;
+    max-width:22rem;
+    margin:0 auto;
+  }
+  .answer-input{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--led);
+    font-family:var(--font-mono);
+    font-size:1.6rem;
+    letter-spacing:0.08em;
+    text-align:center;
+    caret-color:var(--copper-bright);
+  }
+  .answer-input::placeholder{ color:var(--text-dim); opacity:0.6; }
+  .answer-input:focus{ outline:none; }
+
+  .q-timer{
+    font-family:var(--font-mono);
+    font-size:0.9rem;
+    color:var(--text-dim);
+    min-width:3.2rem;
+    text-align:right;
+  }
+  .q-timer.overtime{ color:var(--error); }
+
+  .hint{
+    margin-top:1.2rem;
+    font-size:0.8rem;
+    color:var(--text-dim);
+  }
+
+  /* results screen */
+  .results-console h2{
+    margin:0 0 1.4rem;
+    font-size:1.4rem;
+  }
+  .score-row{
+    display:flex;
+    align-items:baseline;
+    gap:1.5rem;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--trace);
+    padding-bottom:1.3rem;
+    margin-bottom:1.3rem;
+  }
+  .score-big{
+    font-family:var(--font-mono);
+    font-size:2.4rem;
+    font-weight:700;
+    color:var(--led);
+  }
+  .score-meta{ color:var(--text-dim); font-size:0.9rem; line-height:1.6; }
+  .score-meta span{ color:var(--text); font-family:var(--font-mono); }
+
+  .result-block{ margin-bottom:1.5rem; }
+  .result-block h3{
+    font-size:0.95rem;
+    color:var(--text-dim);
+    margin:0 0 0.8rem;
+    font-weight:600;
+  }
+  .result-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:0.7rem;
+  }
+  .result-item{
+    border-left:2px solid var(--copper);
+    padding:0.15rem 0 0.15rem 0.8rem;
+    font-size:0.86rem;
+  }
+  .result-q{ margin-bottom:0.2rem; }
+  .result-ans{ color:var(--text-dim); }
+  .mono{ font-family:var(--font-mono); }
+  .bit-diff{
+    background:rgba(232,115,92,0.25);
+    color:var(--error);
+    border-radius:2px;
+  }
+
+  .empty-note{ color:var(--text-dim); font-size:0.86rem; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="screen-setup" class="screen">
+    <header class="masthead">
+      <h1>Latihan Kilat Biner</h1>
+      <p class="tagline">Asah kecepatan membaca gerbang logika dan bilangan biner. Target: enam detik tiap soal.</p>
+    </header>
+
+    <div class="console">
+      <div class="field-group">
+        <span class="field-label">Kategori soal</span>
+        <div class="category-grid">
+          <button type="button" class="cat-card" data-cat="logic">
+            <span class="icons-row">
+              <svg class="gate-svg" viewBox="0 0 40 32" aria-hidden="true"><path d="M4 4 H18 A12 12 0 0 1 18 28 H4 Z" fill="none" stroke="currentColor" stroke-width="2.2"/><line x1="4" y1="10" x2="0" y2="10" stroke="currentColor" stroke-width="2.2"/><line x1="4" y1="22" x2="0" y2="22" stroke="currentColor" stroke-width="2.2"/><line x1="30" y1="16" x2="36" y2="16" stroke="currentColor" stroke-width="2.2"/></svg>
+              <svg class="gate-svg" viewBox="0 0 40 32" aria-hidden="true"><path d="M4 4 Q14 16 4 28 Q24 28 34 16 Q24 4 4 4 Z" fill="none" stroke="currentColor" stroke-width="2.2"/><line x1="2" y1="10" x2="6" y2="10" stroke="currentColor" stroke-width="2.2"/><line x1="2" y1="22" x2="6" y2="22" stroke="currentColor" stroke-width="2.2"/><line x1="34" y1="16" x2="38" y2="16" stroke="currentColor" stroke-width="2.2"/></svg>
+              <svg class="gate-svg" viewBox="0 0 40 32" aria-hidden="true"><path d="M6 4 Q16 16 6 28 Q26 28 36 16 Q26 4 6 4 Z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M1 4 Q11 16 1 28" fill="none" stroke="currentColor" stroke-width="2.2"/><line x1="36" y1="16" x2="39" y2="16" stroke="currentColor" stroke-width="2.2"/></svg>
+            </span>
+            <span class="cat-name">Gerbang AND / OR / XOR</span>
+            <span class="cat-desc">Hitung hasil operasi bit dari 2–3 bilangan biner.</span>
+          </button>
+
+          <button type="button" class="cat-card" data-cat="decimal">
+            <span class="icons-row">
+              <svg class="bits-svg" viewBox="0 0 96 24" aria-hidden="true">
+                <rect x="0" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <rect x="20" y="4" width="16" height="16" rx="3" fill="currentColor"/>
+                <rect x="40" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <rect x="60" y="4" width="16" height="16" rx="3" fill="currentColor"/>
+                <rect x="80" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/>
+              </svg>
+            </span>
+            <span class="cat-name">Desimal ke biner</span>
+            <span class="cat-desc">Ubah bilangan desimal menjadi biner secepat mungkin.</span>
+          </button>
+
+          <button type="button" class="cat-card" data-cat="mixed">
+            <span class="icons-row">
+              <svg class="mix-svg" viewBox="0 0 60 32" aria-hidden="true">
+                <path d="M4 6 H16 A10 10 0 0 1 16 26 H4 Z" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <rect x="34" y="6" width="13" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <rect x="34" y="21" width="13" height="6" rx="2" fill="currentColor"/>
+                <line x1="24" y1="16" x2="30" y2="16" stroke="currentColor" stroke-width="2.2" stroke-dasharray="2 3"/>
+              </svg>
+            </span>
+            <span class="cat-name">Campuran</span>
+            <span class="cat-desc">Kombinasi acak dari dua kategori di atas.</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Jumlah soal</span>
+        <div class="count-row">
+          <button type="button" class="count-switch" data-count="10">10 soal</button>
+          <button type="button" class="count-switch" data-count="25">25 soal</button>
+          <button type="button" class="count-switch" data-count="100">100 soal</button>
+        </div>
+      </div>
+
+      <p class="budget-readout">Target waktu total: <strong id="budget-value">— detik</strong> (6 detik / soal)</p>
+
+      <button type="button" id="start-btn" class="cta" disabled>Mulai latihan</button>
+    </div>
+  </section>
+
+  <section id="screen-quiz" class="screen hidden">
+    <div class="status-row">
+      <span id="q-progress">Soal 1 / 10</span>
+      <span id="budget-clock">60.0s tersisa</span>
+    </div>
+    <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+
+    <div class="console quiz-console">
+      <div id="op-tag" class="op-tag">AND</div>
+      <div id="question-readout" class="readout">—</div>
+      <div class="answer-row">
+        <input id="answer-input" class="answer-input" type="text" inputmode="numeric" autocomplete="off" placeholder="jawaban" aria-label="Jawaban biner">
+        <span id="q-timer" class="q-timer">0.0s</span>
+      </div>
+      <p class="hint">Ketik jawaban biner, lalu tekan Enter untuk lanjut</p>
+    </div>
+  </section>
+
+  <section id="screen-results" class="screen hidden">
+    <div class="console results-console">
+      <h2>Hasil latihan</h2>
+      <div class="score-row">
+        <div class="score-big"><span id="score-correct">0</span>/<span id="score-total">0</span></div>
+        <div class="score-meta">
+          <div><span id="score-pct">0%</span> jawaban benar</div>
+          <div>rata-rata <span id="score-avg">0.0</span> detik / soal</div>
+        </div>
+      </div>
+
+      <div class="result-block" id="wrong-block">
+        <h3>Koreksi jawaban salah</h3>
+        <ul id="wrong-list" class="result-list"></ul>
+      </div>
+
+      <div class="result-block" id="slow-block">
+        <h3>Soal dengan waktu di atas 6 detik</h3>
+        <ul id="slow-list" class="result-list"></ul>
+      </div>
+
+      <button type="button" id="restart-btn" class="cta">Coba lagi</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var state = {
+    category:null, count:null,
+    questions:[], index:0, results:[],
+    startTime:0, quizStart:0, tickInterval:null
+  };
+
+  // ---------- helpers ----------
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function pickBitLength(){
+    return Math.random() < 0.8 ? randInt(1,5) : randInt(6,8);
+  }
+
+  function genBinaryString(len){
+    var s = "";
+    for (var i=0;i<len;i++){
+      if (i===0 && len>1) s += "1";
+      else s += (Math.random()<0.5 ? "0" : "1");
+    }
+    return s;
+  }
+
+  function genLogicQuestion(){
+    var operandCount = Math.random()<0.5 ? 2 : 3;
+    var ops = ["AND","OR","XOR"];
+    var operator = ops[randInt(0,2)];
+    var operands = [];
+    for (var i=0;i<operandCount;i++){
+      operands.push(genBinaryString(pickBitLength()));
+    }
+    var result = parseInt(operands[0],2);
+    for (var j=1;j<operands.length;j++){
+      var v = parseInt(operands[j],2);
+      if (operator==="AND") result = result & v;
+      else if (operator==="OR") result = result | v;
+      else result = result ^ v;
+    }
+    return {
+      category:"logic",
+      operator: operator,
+      operands: operands,
+      prompt: operands.join(" " + operator + " "),
+      answer: result.toString(2)
+    };
+  }
+
+  function genDecimalQuestion(){
+    var L = randInt(1,16);
+    var low = Math.pow(2, L-1);
+    var high = Math.pow(2, L) - 1;
+    var value = randInt(low, high);
+    return {
+      category:"decimal",
+      value: value,
+      prompt: String(value),
+      answer: value.toString(2)
+    };
+  }
+
+  function genQuestion(cat){
+    if (cat==="logic") return genLogicQuestion();
+    if (cat==="decimal") return genDecimalQuestion();
+    return Math.random()<0.5 ? genLogicQuestion() : genDecimalQuestion();
+  }
+
+  function buildQuestions(cat, count){
+    var arr = [];
+    for (var i=0;i<count;i++) arr.push(genQuestion(cat));
+    return arr;
+  }
+
+  function normalizeBinary(raw){
+    var s = (raw || "").replace(/[^01]/g, "");
+    s = s.replace(/^0+(?=.)/, "");
+    if (s === "") s = "0";
+    return s;
+  }
+
+  function questionLabel(q){
+    if (q.category === "logic") return q.prompt;
+    return q.prompt + " → biner";
+  }
+
+  function diffMarkup(given, correct){
+    var len = Math.max(given.length, correct.length);
+    var g = given.padStart(len, "0");
+    var c = correct.padStart(len, "0");
+    var gHtml = "", cHtml = "";
+    for (var i=0;i<len;i++){
+      var mismatch = g[i] !== c[i];
+      gHtml += "<span class=\"" + (mismatch ? "bit-diff" : "") + "\">" + g[i] + "</span>";
+      cHtml += "<span class=\"" + (mismatch ? "bit-diff" : "") + "\">" + c[i] + "</span>";
+    }
+    return { g: gHtml, c: cHtml };
+  }
+
+  // ---------- screens ----------
+  var screens = {
+    setup: document.getElementById("screen-setup"),
+    quiz: document.getElementById("screen-quiz"),
+    results: document.getElementById("screen-results")
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){ screens[k].classList.add("hidden"); });
+    screens[name].classList.remove("hidden");
+  }
+
+  // ---------- setup ----------
+  var catButtons = document.querySelectorAll(".cat-card");
+  var countButtons = document.querySelectorAll(".count-switch");
+  var startBtn = document.getElementById("start-btn");
+  var budgetValue = document.getElementById("budget-value");
+
+  catButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      catButtons.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      state.category = btn.getAttribute("data-cat");
+      updateStartAvailability();
+    });
+  });
+
+  countButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      countButtons.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      state.count = parseInt(btn.getAttribute("data-count"), 10);
+      budgetValue.textContent = (state.count * 6) + " detik";
+      updateStartAvailability();
+    });
+  });
+
+  function updateStartAvailability(){
+    startBtn.disabled = !(state.category && state.count);
+  }
+
+  startBtn.addEventListener("click", startQuiz);
+
+  // ---------- quiz ----------
+  var qProgress = document.getElementById("q-progress");
+  var budgetClock = document.getElementById("budget-clock");
+  var progressFill = document.getElementById("progress-fill");
+  var opTag = document.getElementById("op-tag");
+  var questionReadout = document.getElementById("question-readout");
+  var answerInput = document.getElementById("answer-input");
+  var qTimer = document.getElementById("q-timer");
+
+  function startQuiz(){
+    state.questions = buildQuestions(state.category, state.count);
+    state.index = 0;
+    state.results = [];
+    state.quizStart = performance.now();
+    showScreen("quiz");
+    showQuestion();
+    if (state.tickInterval) clearInterval(state.tickInterval);
+    state.tickInterval = setInterval(tick, 100);
+  }
+
+  function showQuestion(){
+    var q = state.questions[state.index];
+    state.startTime = performance.now();
+    qProgress.textContent = "Soal " + (state.index + 1) + " / " + state.questions.length;
+    progressFill.style.width = ((state.index / state.questions.length) * 100) + "%";
+
+    if (q.category === "logic"){
+      opTag.textContent = q.operator;
+      opTag.classList.remove("decimal");
+    } else {
+      opTag.textContent = "DESIMAL";
+      opTag.classList.add("decimal");
+    }
+    questionReadout.textContent = q.prompt;
+    answerInput.value = "";
+    qTimer.textContent = "0.0s";
+    qTimer.classList.remove("overtime");
+    answerInput.focus();
+  }
+
+  function tick(){
+    var now = performance.now();
+    var qElapsed = (now - state.startTime) / 1000;
+    qTimer.textContent = qElapsed.toFixed(1) + "s";
+    qTimer.classList.toggle("overtime", qElapsed > 6);
+
+    var totalElapsed = (now - state.quizStart) / 1000;
+    var budget = state.questions.length * 6;
+    var remaining = budget - totalElapsed;
+    if (remaining >= 0){
+      budgetClock.textContent = remaining.toFixed(1) + "s tersisa";
+      budgetClock.classList.remove("overtime");
+    } else {
+      budgetClock.textContent = "+" + Math.abs(remaining).toFixed(1) + "s lewat target";
+      budgetClock.classList.add("overtime");
+    }
+  }
+
+  answerInput.addEventListener("input", function(){
+    answerInput.value = answerInput.value.replace(/[^01]/g, "");
+  });
+
+  answerInput.addEventListener("keydown", function(e){
+    if (e.key === "Enter"){
+      e.preventDefault();
+      submitAnswer();
+    }
+  });
+
+  function submitAnswer(){
+    var q = state.questions[state.index];
+    var elapsed = (performance.now() - state.startTime) / 1000;
+    var raw = answerInput.value.trim();
+    var skipped = raw === "";
+    var given = skipped ? "" : normalizeBinary(raw);
+    var correctAns = normalizeBinary(q.answer);
+    var correct = !skipped && given === correctAns;
+
+    var record = {};
+    for (var k in q) record[k] = q[k];
+    record.given = given;
+    record.skipped = skipped;
+    record.elapsed = elapsed;
+    record.correct = correct;
+    record.qIndex = state.index;
+    state.results.push(record);
+
+    state.index++;
+    if (state.index < state.questions.length){
+      showQuestion();
+    } else {
+      clearInterval(state.tickInterval);
+      progressFill.style.width = "100%";
+      showResults();
+    }
+  }
+
+  // ---------- results ----------
+  var scoreCorrect = document.getElementById("score-correct");
+  var scoreTotal = document.getElementById("score-total");
+  var scorePct = document.getElementById("score-pct");
+  var scoreAvg = document.getElementById("score-avg");
+  var wrongList = document.getElementById("wrong-list");
+  var slowList = document.getElementById("slow-list");
+  var wrongBlock = document.getElementById("wrong-block");
+  var slowBlock = document.getElementById("slow-block");
+
+  function showResults(){
+    showScreen("results");
+    var total = state.results.length;
+    var correctCount = state.results.filter(function(r){ return r.correct; }).length;
+    var avg = state.results.reduce(function(a,r){ return a + r.elapsed; }, 0) / total;
+
+    scoreCorrect.textContent = correctCount;
+    scoreTotal.textContent = total;
+    scorePct.textContent = Math.round((correctCount / total) * 100) + "%";
+    scoreAvg.textContent = avg.toFixed(1);
+
+    var wrongs = state.results.filter(function(r){ return !r.correct; });
+    wrongList.innerHTML = "";
+    if (wrongs.length === 0){
+      wrongBlock.querySelector("h3").insertAdjacentHTML("afterend", "");
+      var p = document.createElement("p");
+      p.className = "empty-note";
+      p.textContent = "Semua jawaban benar — tidak ada koreksi.";
+      wrongList.appendChild(p);
+    } else {
+      wrongs.forEach(function(r){
+        var correctAns = normalizeBinary(r.answer);
+        var givenDisplay = r.skipped ? "(tidak dijawab)" : r.given;
+        var diff = diffMarkup(r.skipped ? "" : r.given, correctAns);
+        var li = document.createElement("li");
+        li.className = "result-item";
+        li.innerHTML =
+          "<div class=\"result-q\">Soal " + (r.qIndex + 1) + ": <span class=\"mono\">" + questionLabel(r) + "</span></div>" +
+          "<div class=\"result-ans\">Jawaban Anda: <span class=\"mono\">" + (r.skipped ? givenDisplay : diff.g) + "</span></div>" +
+          "<div class=\"result-ans\">Jawaban benar: <span class=\"mono\">" + diff.c + "</span></div>";
+        wrongList.appendChild(li);
+      });
+    }
+
+    var slows = state.results.filter(function(r){ return r.elapsed > 6; });
+    slowList.innerHTML = "";
+    if (slows.length === 0){
+      var p2 = document.createElement("p");
+      p2.className = "empty-note";
+      p2.textContent = "Semua soal dijawab dalam waktu enam detik atau kurang.";
+      slowList.appendChild(p2);
+    } else {
+      slows.forEach(function(r){
+        var li = document.createElement("li");
+        li.className = "result-item";
+        li.innerHTML =
+          "<div class=\"result-q\">Soal " + (r.qIndex + 1) + ": <span class=\"mono\">" + questionLabel(r) +
+          "</span> — <span class=\"mono\">" + r.elapsed.toFixed(1) + "s</span></div>";
+        slowList.appendChild(li);
+      });
+    }
+  }
+
+  document.getElementById("restart-btn").addEventListener("click", function(){
+    showScreen("setup");
+  });
+
+})();
+</script>
+</body>
+</html>
