@@ -374,7 +374,7 @@
               </svg>
             </span>
             <span class="cat-name">Desimal ke biner</span>
-            <span class="cat-desc">Ubah bilangan desimal menjadi biner secepat mungkin.</span>
+            <span class="cat-desc">Kenali pola bit (3×2ⁿ, 5×2ⁿ, 7×2ⁿ, 9×2ⁿ, 2ⁿ−1) untuk konversi kilat.</span>
           </button>
 
           <button type="button" class="cat-card" data-cat="mixed">
@@ -502,16 +502,75 @@
     };
   }
 
+  // Distribusi panjang bit untuk soal desimal->biner:
+  // 90% angka dalam rentang 1-8 bit (s.d. 256), 10% dalam rentang 9-16 bit (s.d. 65536).
+  // Di dalam masing-masing rentang, setiap panjang bit punya peluang keluar yang sama
+  // (mis. 5-bit dan 6-bit sama-sama mungkin).
+  function pickTieredBitLength(){
+    return Math.random() < 0.9 ? randInt(1,8) : randInt(9,16);
+  }
+
+  // Setiap angka desimal yang dibuat mengikuti salah satu trik pola bit berikut,
+  // dipilih acak dari trik yang mungkin untuk panjang bit tersebut.
+  function feasibleTricks(bitLength){
+    var list = ["allones"]; // trik "semua/hampir semua 1" selalu bisa untuk panjang berapa pun
+    if (bitLength >= 2) list.push("adj1");   // dua bit berjarak 1 -> 3 * 2^n
+    if (bitLength >= 3) list.push("adj2");   // dua bit berjarak 2 -> 5 * 2^n
+    if (bitLength >= 3) list.push("three");  // tiga bit bersebelahan -> 7 * 2^n
+    if (bitLength >= 4) list.push("adj3");   // dua bit berjarak 3 -> 9 * 2^n
+    return list;
+  }
+
+  function buildTrickNumber(bitLength){
+    var options = feasibleTricks(bitLength);
+    var type = options[randInt(0, options.length - 1)];
+    var value, label;
+
+    if (type === "adj1"){
+      var n1 = bitLength - 2;
+      value = 3 * Math.pow(2, n1);
+      label = "dua bit berjarak 1 → 3×2" + "\u207F" + " (n=" + n1 + ")";
+    } else if (type === "adj2"){
+      var n2 = bitLength - 3;
+      value = 5 * Math.pow(2, n2);
+      label = "dua bit berjarak 2 → 5×2" + "\u207F" + " (n=" + n2 + ")";
+    } else if (type === "three"){
+      var n3 = bitLength - 3;
+      value = 7 * Math.pow(2, n3);
+      label = "tiga bit bersebelahan → 7×2" + "\u207F" + " (n=" + n3 + ")";
+    } else if (type === "adj3"){
+      var n4 = bitLength - 4;
+      value = 9 * Math.pow(2, n4);
+      label = "dua bit berjarak 3 → 9×2" + "\u207F" + " (n=" + n4 + ")";
+    } else {
+      var m = bitLength;
+      var maxFlips = Math.min(4, m - 1);
+      var k = randInt(0, maxFlips);
+      var positions = [];
+      for (var p = 0; p <= m - 2; p++) positions.push(p);
+      for (var i = positions.length - 1; i > 0; i--){
+        var j = randInt(0, i);
+        var tmp = positions[i]; positions[i] = positions[j]; positions[j] = tmp;
+      }
+      var flips = positions.slice(0, k);
+      value = Math.pow(2, m) - 1;
+      flips.forEach(function(pos){ value -= Math.pow(2, pos); });
+      label = k === 0
+        ? "semua bit 1 → 2" + "\u207F" + "−1 (n=" + m + ")"
+        : "hampir semua bit 1, " + k + " bit nol → 2" + "\u207F" + "−1 dikurangi (n=" + m + ")";
+    }
+    return { value: value, label: label };
+  }
+
   function genDecimalQuestion(){
-    var L = randInt(1,16);
-    var low = Math.pow(2, L-1);
-    var high = Math.pow(2, L) - 1;
-    var value = randInt(low, high);
+    var bitLength = pickTieredBitLength();
+    var built = buildTrickNumber(bitLength);
     return {
       category:"decimal",
-      value: value,
-      prompt: String(value),
-      answer: value.toString(2)
+      value: built.value,
+      prompt: String(built.value),
+      answer: built.value.toString(2),
+      pattern: built.label
     };
   }
 
@@ -729,6 +788,7 @@
         li.className = "result-item";
         li.innerHTML =
           "<div class=\"result-q\">Soal " + (r.qIndex + 1) + ": <span class=\"mono\">" + questionLabel(r) + "</span></div>" +
+          (r.pattern ? "<div class=\"result-ans\">Pola: " + r.pattern + "</div>" : "") +
           "<div class=\"result-ans\">Jawaban Anda: <span class=\"mono\">" + (r.skipped ? givenDisplay : diff.g) + "</span></div>" +
           "<div class=\"result-ans\">Jawaban benar: <span class=\"mono\">" + diff.c + "</span></div>";
         wrongList.appendChild(li);
@@ -748,7 +808,8 @@
         li.className = "result-item";
         li.innerHTML =
           "<div class=\"result-q\">Soal " + (r.qIndex + 1) + ": <span class=\"mono\">" + questionLabel(r) +
-          "</span> — <span class=\"mono\">" + r.elapsed.toFixed(1) + "s</span></div>";
+          "</span> — <span class=\"mono\">" + r.elapsed.toFixed(1) + "s</span></div>" +
+          (r.pattern ? "<div class=\"result-ans\">Pola: " + r.pattern + "</div>" : "");
         slowList.appendChild(li);
       });
     }
