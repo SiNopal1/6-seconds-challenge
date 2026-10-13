@@ -147,7 +147,7 @@ a,button,input{font-family:inherit}
     ["arith","+ − × ÷","Gabungan hitung","Acak: tambah, kurang, kali, bagi."],
     ["neg","−x","Biner negatif","−x = ~x + 1 pada 8 bit (two's complement)."],
     ["hex","0x","Biner ke hexadesimal","Kelompokkan 4 bit per digit hex."],
-    ["signed","±","Tambah/kurang bertanda","Operand boleh negatif, hasil −128 sampai 127."],
+    ["signed","±","Tambah/kurang bertanda","Biner dengan digit kiri sebagai tanda (two's complement); jawab desimal, hasil −128…127."],
     ["all","ALL","Gabungan semuanya","Semua kategori di atas diacak."]
   ];
 
@@ -262,19 +262,23 @@ a,button,input{font-family:inherit}
       hint:"Jawab dalam hexadesimal (0–9, A–F)"};
   }
 
-  // ---------- generator: tambah/kurang bertanda (hasil -128..127) ----------
-  function sbin(n){ return (n<0 ? "-" : "") + bin(Math.abs(n)); }
-  function paren(n){ return n<0 ? "(" + sbin(n) + ")" : sbin(n); }
+  // ---------- generator: tambah/kurang bertanda (two's complement, digit kiri = tanda) ----------
+  function toSigned(u, w){ return u >= Math.pow(2,w-1) ? u - Math.pow(2,w) : u; }
   function genSigned(){
-    var a, b, sub, res;
+    var w, lim, a, b, sub, res;
     do {
-      a = rndByBits(127) * (Math.random()<0.5 ? -1 : 1);
-      b = rndByBits(127) * (Math.random()<0.5 ? -1 : 1);
+      w = randInt(4,8);
+      lim = Math.pow(2,w);
+      a = randInt(0, lim-1);
+      b = randInt(0, lim-1);
       sub = Math.random()<0.5;
-      res = sub ? a-b : a+b;
-    } while (res < -128 || res > 127 || (a>0 && b>0 && res>=0));
-    return {category:"signed", type:"sbin", tag:"BERTANDA", prompt:paren(a)+" "+(sub?"−":"+")+" "+paren(b),
-      answer:sbin(res), hint:"Pakai tanda - untuk hasil negatif, contoh: -101"};
+      res = sub ? toSigned(a,w) - toSigned(b,w) : toSigned(a,w) + toSigned(b,w);
+    } while (res < -lim/2 || res >= lim/2 || (a < lim/2 && b < lim/2));
+    var u = (res + lim) % lim, pat = "hasil biner " + pad(u,w);
+    if (res < 0){ var inv = (lim-1) ^ u; pat += "; digit kiri 1 → ~x = " + pad(inv,w) + ", +1 = " + pad(inv+1,w) + " = " + (inv+1) + ", beri tanda negatif"; }
+    else pat += "; digit kiri 0 → langsung konversi";
+    return {category:"signed", type:"sdec", tag:"BERTANDA", prompt:pad(a,w)+" "+(sub?"−":"+")+" "+pad(b,w),
+      answer:String(res), pattern:pat, hint:"Hitung dalam biner, jawab dalam desimal (negatif pakai -). Digit kiri = tanda"};
   }
 
   function genAll(){
@@ -300,15 +304,15 @@ a,button,input{font-family:inherit}
   function normalizeAnswer(raw, type){
     raw = raw || "";
     if (type === "hex") return raw.toUpperCase().replace(/[^0-9A-F]/g,"").replace(/^0+(?=.)/,"") || "0";
-    if (type === "sbin"){
-      var d = normalizeBinary(raw.replace(/-/g,""));
+    if (type === "sdec"){
+      var d = raw.replace(/[^0-9]/g,"").replace(/^0+(?=.)/,"") || "0";
       return (raw.charAt(0) === "-" && d !== "0" ? "-" : "") + d;
     }
     return normalizeBinary(raw);
   }
   function filterInput(v, type){
     if (type === "hex") return v.toUpperCase().replace(/[^0-9A-F]/g,"");
-    if (type === "sbin") return (v.charAt(0) === "-" ? "-" : "") + v.replace(/[^01]/g,"");
+    if (type === "sdec") return (v.charAt(0) === "-" ? "-" : "") + v.replace(/[^0-9]/g,"");
     return v.replace(/[^01]/g,"");
   }
   function questionLabel(q){
