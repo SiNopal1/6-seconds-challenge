@@ -27,6 +27,8 @@ a,button,input{font-family:inherit}
 .console::after{bottom:-1px;right:-1px;border-left:none;border-top:none;border-bottom-right-radius:6px}
 .field-group{margin-bottom:1.6rem}
 .field-label{display:block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:.7rem}
+.cat-group-title{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--copper-bright);margin:1.2rem 0 .6rem;padding-bottom:.35rem;border-bottom:1px solid var(--trace-soft)}
+.cat-group-title:first-child{margin-top:0}
 .category-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
 @media (max-width:640px){.category-grid{grid-template-columns:repeat(2,1fr)}}
 .cat-card{text-align:left;background:rgba(0,0,0,.15);border:1px solid var(--trace-soft);border-radius:8px;padding:.9rem .9rem 1rem;color:var(--text);cursor:pointer;display:flex;flex-direction:column;gap:.55rem;transition:border-color .15s,background .15s}
@@ -53,9 +55,10 @@ a,button,input{font-family:inherit}
 .quiz-console{text-align:center;padding:2.4rem 1.5rem}
 .op-tag{display:inline-block;font-family:var(--font-mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--copper-bright);border:1px solid var(--copper);border-radius:4px;padding:.2rem .55rem;margin-bottom:1.2rem}
 .op-tag.alt{color:var(--led);border-color:var(--led-dim)}
-.readout{font-family:var(--font-mono);font-weight:600;font-size:clamp(1.4rem,5.5vw,2.3rem);letter-spacing:.03em;line-height:1.4;word-break:break-word;text-shadow:0 0 18px rgba(201,132,60,.35);margin-bottom:1.8rem}
-.answer-row{display:flex;align-items:center;justify-content:center;gap:.9rem;border-bottom:1px solid var(--trace);padding-bottom:.6rem;max-width:22rem;margin:0 auto}
+.readout{font-family:var(--font-mono);font-weight:600;font-size:clamp(1.4rem,5.5vw,2.3rem);letter-spacing:.03em;line-height:1.4;word-break:break-word;white-space:pre-wrap;text-shadow:0 0 18px rgba(201,132,60,.35);margin-bottom:1.8rem}
+.answer-row{display:flex;align-items:center;justify-content:center;gap:.9rem;border-bottom:1px solid var(--trace);padding-bottom:.6rem;max-width:34rem;margin:0 auto}
 .answer-input{flex:1;min-width:0;background:transparent;border:none;color:var(--led);font-family:var(--font-mono);font-size:1.6rem;letter-spacing:.08em;text-align:center;caret-color:var(--copper-bright)}
+.answer-input.long{font-size:1.15rem;letter-spacing:.04em}
 .answer-input::placeholder{color:var(--text-dim);opacity:.6}
 .answer-input:focus{outline:none}
 .q-timer{font-family:var(--font-mono);font-size:.9rem;color:var(--text-dim);min-width:3.2rem;text-align:right}
@@ -81,12 +84,12 @@ a,button,input{font-family:inherit}
   <section id="screen-setup" class="screen">
     <header class="masthead">
       <h1>Latihan Kilat Biner</h1>
-      <p class="tagline">Asah kecepatan membaca gerbang logika, aritmetika biner, dan konversi bilangan. Atur sendiri jumlah soal dan waktu per soal.</p>
+      <p class="tagline">Asah kecepatan membaca gerbang logika, aritmetika biner, shift/rotate, dan konversi bilangan. Atur sendiri jumlah soal dan waktu per soal.</p>
     </header>
     <div class="console">
       <div class="field-group">
         <span class="field-label">Kategori soal</span>
-        <div class="category-grid" id="cat-grid"></div>
+        <div id="cat-grid"></div>
       </div>
       <div class="field-group">
         <span class="field-label">Pengaturan latihan</span>
@@ -136,19 +139,25 @@ a,button,input{font-family:inherit}
 (function(){
   "use strict";
 
+  var GROUPS = ["Basic","Katabaku","Bilangan negatif","Representasi","Advanced logic","Gabungan"];
   var CATS = [
-    ["logic","& | ^","Gerbang AND / OR / XOR","Hitung hasil operasi bit dari 2–3 bilangan biner."],
-    ["decimal","3×2ⁿ","Desimal ke biner","Kenali pola bit (3×2ⁿ, 5×2ⁿ, 7×2ⁿ, 9×2ⁿ, 2ⁿ−1) untuk konversi kilat."],
-    ["mixed","⇄","Campuran","Acak antara gerbang logika dan desimal ke biner."],
-    ["add","+","Penjumlahan biner","Hasil 0–511."],
-    ["sub","−","Pengurangan biner","Hasil 0–511."],
-    ["mul","×","Perkalian biner","Hasil 0–511."],
-    ["div","÷","Pembagian biner","Hasil 0–127, selalu habis dibagi."],
-    ["arith","+ − × ÷","Gabungan hitung","Acak: tambah, kurang, kali, bagi."],
-    ["neg","−x","Biner negatif","−x = ~x + 1 pada 8 bit (two's complement)."],
-    ["hex","0x","Biner ke hexadesimal","Kelompokkan 4 bit per digit hex."],
-    ["signed","±","Tambah/kurang bertanda","Biner dengan digit kiri sebagai tanda (two's complement); jawab desimal, hasil −128…127."],
-    ["all","ALL","Gabungan semuanya","Semua kategori di atas diacak."]
+    ["and","&","Gerbang AND","Hasil AND dari 2–3 bilangan biner.","Basic"],
+    ["or","|","Gerbang OR","Hasil OR dari 2–3 bilangan biner.","Basic"],
+    ["xor","^","Gerbang XOR","Hasil XOR dari 2–3 bilangan biner.","Basic"],
+    ["add","+","Penjumlahan biner","Hasil 0–511.","Katabaku"],
+    ["sub","−","Pengurangan biner","Hasil 0–511.","Katabaku"],
+    ["mul","×","Perkalian biner","Hasil 0–511.","Katabaku"],
+    ["div","÷","Pembagian biner","Hasil 0–127, selalu habis dibagi.","Katabaku"],
+    ["neg","−x","Biner negatif","−x = ~x + 1 pada 8 bit (two's complement).","Bilangan negatif"],
+    ["signed","±","Tambah/kurang bertanda","Digit kiri sebagai tanda (two's complement); jawab desimal, hasil −128…127.","Bilangan negatif"],
+    ["decimal","3×2ⁿ","Desimal ke biner","Kenali pola bit (3×2ⁿ, 5×2ⁿ, 7×2ⁿ, 9×2ⁿ, 2ⁿ−1) untuk konversi kilat.","Representasi"],
+    ["hex","0x","Biner ke hexadesimal","Kelompokkan 4 bit per digit hex.","Representasi"],
+    ["ascii","Aa1","Teks ke ASCII (hex)","Kalimat absurd pendek (huruf kecil, kapital, angka, spasi) ke kode ASCII hex.","Representasi"],
+    ["shift","<< >>","Shift (SHL / SHR)","Geser bit 8-bit, sisa diisi 0. Contoh: 11001100 SHR 2 = 00110011.","Advanced logic"],
+    ["rotate","↻","Rotate (ROL / ROR)","Putar bit 8-bit; bit yang keluar masuk dari sisi lain.","Advanced logic"],
+    ["logic","& | ^","Basic acak","Acak antara AND, OR, dan XOR.","Gabungan"],
+    ["arith","+ − × ÷","Gabungan hitung","Acak: tambah, kurang, kali, bagi.","Gabungan"],
+    ["all","ALL","Gabungan semuanya","Semua kategori di atas diacak.","Gabungan"]
   ];
 
   var state = {category:null, count:10, secs:6, questions:[], index:0, results:[], startTime:0, quizStart:0, tickInterval:null};
@@ -174,10 +183,10 @@ a,button,input{font-family:inherit}
     return s;
   }
 
-  // ---------- generator: logika ----------
-  function genLogicQuestion(){
+  // ---------- generator: logika (operator bisa dipaksa: AND / OR / XOR) ----------
+  function genLogicQuestion(forced){
     var operandCount = Math.random()<0.5 ? 2 : 3;
-    var operator = ["AND","OR","XOR"][randInt(0,2)];
+    var operator = forced || ["AND","OR","XOR"][randInt(0,2)];
     var operands = [];
     for (var i=0;i<operandCount;i++) operands.push(genBinaryString(pickBitLength()));
     var result = parseInt(operands[0],2);
@@ -189,6 +198,24 @@ a,button,input{font-family:inherit}
     }
     return {category:"logic", type:"bin", tag:operator, operator:operator, operands:operands,
       prompt:operands.join(" " + operator + " "), answer:bin(result)};
+  }
+
+  // ---------- generator: shift & rotate (8 bit) ----------
+  function genShift(){
+    var v = randInt(1,254), s = pad(v,8), n = randInt(1,7), left = Math.random()<0.5, res, pat;
+    if (left){ res = (v << n) & 255; pat = "geser kiri " + n + ": buang " + s.slice(0,n) + " di kiri, isi " + n + " nol di kanan"; }
+    else { res = v >> n; pat = "geser kanan " + n + ": buang " + s.slice(8-n) + " di kanan, isi " + n + " nol di kiri"; }
+    var op = left ? "SHL" : "SHR";
+    return {category:"shift", type:"bin", tag:op, prompt:s + " " + op + " " + n, answer:bin(res), width:8,
+      pattern:pat, hint:"Jawab dalam 8 bit (nol di depan boleh dihilangkan)"};
+  }
+  function genRotate(){
+    var v = randInt(1,254), s = pad(v,8), n = randInt(1,7), left = Math.random()<0.5, res, pat;
+    if (left){ res = ((v << n) | (v >> (8-n))) & 255; pat = "putar kiri " + n + ": " + s.slice(0,n) + " pindah dari kiri ke kanan"; }
+    else { res = ((v >> n) | (v << (8-n))) & 255; pat = "putar kanan " + n + ": " + s.slice(8-n) + " pindah dari kanan ke kiri"; }
+    var op = left ? "ROL" : "ROR";
+    return {category:"rotate", type:"bin", tag:op, prompt:s + " " + op + " " + n, answer:bin(res), width:8,
+      pattern:pat, hint:"Jawab dalam 8 bit (nol di depan boleh dihilangkan)"};
   }
 
   // ---------- generator: desimal -> biner ----------
@@ -250,7 +277,7 @@ a,button,input{font-family:inherit}
   function genNeg(){
     var x = rndByBits(127), inv = 255 ^ x;
     return {category:"neg", type:"bin", tag:"NEGASI 8-BIT", prompt:pad(x,8), label:"−x, x = "+pad(x,8),
-      answer:bin((inv+1) & 255), pattern:"~x = "+pad(inv,8)+", lalu +1", hint:"Jawab dalam 8 bit (−x = ~x + 1)"};
+      answer:bin((inv+1) & 255), width:8, pattern:"~x = "+pad(inv,8)+", lalu +1", hint:"Jawab dalam 8 bit (−x = ~x + 1)"};
   }
 
   // ---------- generator: biner -> hex ----------
@@ -260,6 +287,22 @@ a,button,input{font-family:inherit}
     return {category:"hex", type:"hex", tag:"BINER → HEX", prompt:s, label:s+" → hex",
       answer:parseInt(s,2).toString(16).toUpperCase(), pattern:"kelompok 4 bit: "+groups,
       hint:"Jawab dalam hexadesimal (0–9, A–F)"};
+  }
+
+  // ---------- generator: teks -> ASCII (frasa pendek yang bermakna) ----------
+  var PHRASES = [
+    "kucing minta gaji","ayam naik ojol","nasi lari pagi","mie goreng nangis","kopi jatuh cinta","jin minta wifi",
+    "ikan takut air","sapi ikut ujian","kecoa lulus S3","cicak jadi bos","robot ngidam bakso","semut bawa 99 gula",
+    "BEBEK JADI CEO","KUCING JADI DOSEN","KODOK TELAT 5 MENIT","UFO PARKIR 2 JAM","ZOMBIE DIET NASI","POCONG NAIK OJEK",
+    "Sapi Main TikTok","Bebek Ikut Rapat","Hantu Cuti 7 Hari","Tuyul Minta THR","Kuda Ngambek","Dino Makan 12 Sate",
+    "tikus beli 3 pizza","ayam ngutang 50","Gajah Les 4 Jam","Tahu Bulat 500 an"
+  ];
+  function genAscii(){
+    var t = PHRASES[randInt(0, PHRASES.length-1)], chars = t.split("");
+    return {category:"ascii", type:"ascii", tag:"TEKS → ASCII HEX", prompt:t, label:"\"" + t + "\" → ASCII hex",
+      answer:chars.map(function(c){ return c.charCodeAt(0).toString(16).toUpperCase(); }).join(" "),
+      pattern:chars.map(function(c){ return (c === " " ? "spasi" : c) + "=" + c.charCodeAt(0).toString(16).toUpperCase(); }).join(", "),
+      hint:"Jawab kode ASCII hex tiap karakter, pisahkan dengan spasi (spasi = 20)"};
   }
 
   // ---------- generator: tambah/kurang bertanda (two's complement, digit kiri = tanda) ----------
@@ -282,12 +325,17 @@ a,button,input{font-family:inherit}
   }
 
   function genAll(){
-    var g = [genLogicQuestion,genDecimalQuestion,genAdd,genSub,genMul,genDiv,genNeg,genHex,genSigned];
+    var g = [genLogicQuestion,genDecimalQuestion,genAdd,genSub,genMul,genDiv,genNeg,genHex,genSigned,genShift,genRotate,genAscii];
     return g[randInt(0,g.length-1)]();
   }
-  var GEN = {logic:genLogicQuestion, decimal:genDecimalQuestion, add:genAdd, sub:genSub, mul:genMul, div:genDiv,
-    arith:genArith, neg:genNeg, hex:genHex, signed:genSigned, all:genAll,
-    mixed:function(){ return Math.random()<0.5 ? genLogicQuestion() : genDecimalQuestion(); }};
+  var GEN = {
+    and:function(){ return genLogicQuestion("AND"); },
+    or:function(){ return genLogicQuestion("OR"); },
+    xor:function(){ return genLogicQuestion("XOR"); },
+    logic:function(){ return genLogicQuestion(); },
+    shift:genShift, rotate:genRotate, decimal:genDecimalQuestion, add:genAdd, sub:genSub, mul:genMul, div:genDiv,
+    arith:genArith, neg:genNeg, hex:genHex, ascii:genAscii, signed:genSigned, all:genAll
+  };
 
   function buildQuestions(cat, count){
     var arr = [];
@@ -304,6 +352,7 @@ a,button,input{font-family:inherit}
   function normalizeAnswer(raw, type){
     raw = raw || "";
     if (type === "hex") return raw.toUpperCase().replace(/[^0-9A-F]/g,"").replace(/^0+(?=.)/,"") || "0";
+    if (type === "ascii") return raw.split(/\s+/).filter(Boolean).map(function(n){ return n.toUpperCase().replace(/^0+(?=.)/,""); }).join(" ");
     if (type === "sdec"){
       var d = raw.replace(/[^0-9]/g,"").replace(/^0+(?=.)/,"") || "0";
       return (raw.charAt(0) === "-" && d !== "0" ? "-" : "") + d;
@@ -312,6 +361,7 @@ a,button,input{font-family:inherit}
   }
   function filterInput(v, type){
     if (type === "hex") return v.toUpperCase().replace(/[^0-9A-F]/g,"");
+    if (type === "ascii") return v.toUpperCase().replace(/[^0-9A-F ]/g,"");
     if (type === "sdec") return (v.charAt(0) === "-" ? "-" : "") + v.replace(/[^0-9]/g,"");
     return v.replace(/[^01]/g,"");
   }
@@ -330,6 +380,17 @@ a,button,input{font-family:inherit}
     }
     return {g:gH, c:cH};
   }
+  // diff per kode (untuk jawaban ASCII)
+  function diffTokens(given, correct){
+    var g = given ? given.split(" ") : [], c = correct.split(" "), n = Math.max(g.length, c.length), gH = "", cH = "";
+    for (var i=0;i<n;i++){
+      var a = g[i] || "", b = c[i] || "", cls = a !== b ? "bit-diff" : "";
+      if (i){ gH += " "; cH += " "; }
+      gH += "<span class=\"" + cls + "\">" + (a || "—") + "</span>";
+      cH += "<span class=\"" + cls + "\">" + (b || "—") + "</span>";
+    }
+    return {g:gH, c:cH};
+  }
 
   // ---------- layar ----------
   var screens = {setup:document.getElementById("screen-setup"), quiz:document.getElementById("screen-quiz"), results:document.getElementById("screen-results")};
@@ -338,13 +399,23 @@ a,button,input{font-family:inherit}
     screens[name].classList.remove("hidden");
   }
 
-  // ---------- setup ----------
+  // ---------- setup (kategori dikelompokkan) ----------
   var grid = document.getElementById("cat-grid");
-  CATS.forEach(function(c){
-    var b = document.createElement("button");
-    b.type = "button"; b.className = "cat-card"; b.setAttribute("data-cat", c[0]);
-    b.innerHTML = "<span class=\"sym\">" + c[1] + "</span><span class=\"cat-name\">" + c[2] + "</span><span class=\"cat-desc\">" + c[3] + "</span>";
-    grid.appendChild(b);
+  GROUPS.forEach(function(g){
+    var title = document.createElement("div");
+    title.className = "cat-group-title";
+    title.textContent = g;
+    var wrap = document.createElement("div");
+    wrap.className = "category-grid";
+    CATS.forEach(function(c){
+      if (c[4] !== g) return;
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "cat-card"; b.setAttribute("data-cat", c[0]);
+      b.innerHTML = "<span class=\"sym\">" + c[1] + "</span><span class=\"cat-name\">" + c[2] + "</span><span class=\"cat-desc\">" + c[3] + "</span>";
+      wrap.appendChild(b);
+    });
+    grid.appendChild(title);
+    grid.appendChild(wrap);
   });
   var catButtons = document.querySelectorAll(".cat-card");
   var countInput = document.getElementById("count-input");
@@ -407,6 +478,7 @@ a,button,input{font-family:inherit}
     questionReadout.textContent = q.prompt;
     answerInput.value = "";
     answerInput.inputMode = q.type === "bin" ? "numeric" : "text";
+    answerInput.classList.toggle("long", q.type === "ascii");
     qHint.textContent = (q.hint || "Ketik jawaban biner") + ", lalu tekan Enter untuk lanjut";
     qTimer.textContent = "0.0s";
     qTimer.classList.remove("overtime");
@@ -490,7 +562,9 @@ a,button,input{font-family:inherit}
     } else {
       wrongs.forEach(function(r){
         var correctAns = normalizeAnswer(r.answer, r.type);
-        var diff = diffMarkup(r.skipped ? "" : r.given, correctAns);
+        var gv = r.skipped ? "" : r.given;
+        if (r.width){ correctAns = correctAns.padStart(r.width, "0"); if (gv) gv = gv.padStart(r.width, "0"); }
+        var diff = r.type === "ascii" ? diffTokens(gv, correctAns) : diffMarkup(gv, correctAns);
         var li = document.createElement("li");
         li.className = "result-item";
         li.innerHTML =
