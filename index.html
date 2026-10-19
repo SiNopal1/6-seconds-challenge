@@ -152,6 +152,7 @@ a,button,input{font-family:inherit}
     ["signed","±","Tambah/kurang bertanda","Digit kiri sebagai tanda (two's complement); jawab desimal, hasil −128…127.","Bilangan negatif"],
     ["decimal","3×2ⁿ","Desimal ke biner","Kenali pola bit (3×2ⁿ, 5×2ⁿ, 7×2ⁿ, 9×2ⁿ, 2ⁿ−1) untuk konversi kilat.","Representasi"],
     ["hex","0x","Biner ke hexadesimal","Kelompokkan 4 bit per digit hex.","Representasi"],
+    ["ascii1","A","ASCII sederhana","Satu karakter (huruf, angka, simbol) ke kode ASCII hex.","Representasi"],
     ["ascii","Aa1","Teks ke ASCII (hex)","Kalimat absurd pendek (huruf kecil, kapital, angka, spasi) ke kode ASCII hex.","Representasi"],
     ["shift","<< >>","Shift (SHL / SHR)","Geser bit 8-bit, sisa diisi 0. Contoh: 11001100 SHR 2 = 00110011.","Advanced logic"],
     ["rotate","↻","Rotate (ROL / ROR)","Putar bit 8-bit; bit yang keluar masuk dari sisi lain.","Advanced logic"],
@@ -315,6 +316,16 @@ a,button,input{font-family:inherit}
       hint:"Jawab kode ASCII hex tiap karakter, pisahkan dengan spasi (spasi = 20)"};
   }
 
+  function genAscii1(){
+  var pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?.,-+*/=@#$%&()";
+  var c = pool.charAt(randInt(0, pool.length-1));
+  var h = c.charCodeAt(0).toString(16).toUpperCase();
+  var grp = /[0-9]/.test(c) ? "angka: 30–39" : /[A-Z]/.test(c) ? "huruf kapital: 41–5A" : /[a-z]/.test(c) ? "huruf kecil: 61–7A" : "simbol";
+  return {category:"ascii1", type:"ascii", tag:"1 KARAKTER → HEX", prompt:c, label:"\"" + c + "\" → ASCII hex",
+    answer:h, pattern:c + "=" + h + " (" + grp + ")",
+    hint:"Jawab kode ASCII hex satu karakter (contoh: A = 41)"};
+}
+
   // ---------- generator: tambah/kurang bertanda (two's complement, digit kiri = tanda) ----------
   function toSigned(u, w){ return u >= Math.pow(2,w-1) ? u - Math.pow(2,w) : u; }
   function genSigned(){
@@ -335,7 +346,7 @@ a,button,input{font-family:inherit}
   }
 
   function genAll(){
-    var g = [genLogicQuestion,genDecimalQuestion,genAdd,genSub,genMul,genDiv,genNeg,genHex,genSigned,genShift,genRotate,genAscii];
+    var g = [genLogicQuestion,genDecimalQuestion,genAdd,genSub,genMul,genDiv,genNeg,genHex,genSigned,genShift,genRotate,genAscii,genAscii1];
     return g[randInt(0,g.length-1)]();
   }
   var GEN = {
@@ -344,7 +355,7 @@ a,button,input{font-family:inherit}
     xor:function(){ return genLogicQuestion("XOR"); },
     logic:function(){ return genLogicQuestion(); },
     shift:genShift, rotate:genRotate, decimal:genDecimalQuestion, add:genAdd, sub:genSub, mul:genMul, div:genDiv,
-    arith:genArith, neg:genNeg, hex:genHex, ascii:genAscii, signed:genSigned, all:genAll
+    arith:genArith, neg:genNeg, hex:genHex, ascii:genAscii, ascii1:genAscii1, signed:genSigned, all:genAll
   };
 
   function buildQuestions(cat, count){
