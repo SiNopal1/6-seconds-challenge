@@ -291,10 +291,21 @@ a,button,input{font-family:inherit}
 
   // ---------- generator: teks -> ASCII (frasa pendek yang bermakna) ----------
   var PHRASES = [
-    "sa sa", "be bek", "ko dok", "han tu", "tu yul", "ku da", "ci cak", "ke co a", "se mut", "ti kus",
-    "ga jah", "a yam", "i kan", "zom bi", "poc ong", "jin", "ro bot", "di no", "U FO", "ko pi",
-    "mi e", "na si", "ta hu", "BA K SO", "sa te", "PIZ ZA", "ga ji", "O JOL", "wi fi", "DO SEN",
-    "bos", "CEO", "TIK TOK", "ra pat", "U JI AN", "cu ti", "di et", "PAR KIR", "ngu tang", "LA RI"
+    "2 harimau", "singa", "zebra", "jerapah", "kambing", "domba", "babi", "monyet", "orangutan", "kelinci 1",
+    "3 tupai", "rusa", "badak", "buaya", "ular", "penyu", "hiu", "paus", "cumi", "kepiting 2",
+    "4 udang", "belut", "lele", "gurame", "merpati", "elang", "bangau", "angsa", "kakatua", "unta 22",
+    "5 beruang", "serigala", "rubah", "kelelawar", "landak", "musang", "luwak", "kadal", "bunglon", "kupu 33",
+    "6 capung", "lebah", "kunang", "nyamuk", "lalat", "belalang", "jangkrik", "siput", "cacing", "rayap 44",
+    "7 kutu", "ulat", "bekicot", "kecebong", "katak", "tawon", "walet", "kenari", "perkutut", "beo 55",
+    "8 merak", "kasuari", "pelikan", "flamingo", "pinguin", "kanguru", "koala", "panda", "cheetah", "hyena 66",
+    "9 gorila", "dugong", "narwhal", "gurita", "medusa", "bintang", "rajungan", "kerang", "rendang", "soto 37",
+    "10 gado", "pecel", "opor", "ketoprak", "martabak", "bakwan", "cilok", "cimol", "batagor", "siomay 88",
+    "11 lontong", "ketupat", "nasgor", "bubur", "telur", "keju", "roti", "donat", "burger", "kentang 99",
+    "12 sosis", "tempe", "gorengan", "cendol", "dawet", "teh", "susu", "jus", "cokelat", "nanas 100",
+    "13 mangga", "rambutan", "durian", "salak", "jambu", "pepaya", "semangka", "melon", "alpukat", "pisang 200",
+    "14 jeruk", "apel", "anggur", "stroberi", "kelapa", "pete", "jengkol", "kangkung", "bayam", "wortel 300",
+    "15 brokoli", "terong", "timun", "sawi", "cabai", "bawang", "jahe", "kunyit", "lengkuas", "serai 493",
+    "16 sepeda", "motor", "mobil", "bis", "kereta", "pesawat", "kapal", "becak", "delman", "truk 777"
   ];
   function genAscii(){
     var t = PHRASES[randInt(0, PHRASES.length-1)], chars = t.split("");
